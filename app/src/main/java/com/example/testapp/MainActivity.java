@@ -14,6 +14,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -38,7 +39,10 @@ public class MainActivity extends AppCompatActivity {
     private boolean isRecording = false;
 
     private Button startButton, stopButton, playButton;
+    private EditText audioGain;
     private File file;
+
+
 
     private AudioTrack  audioTrack = null;
     private Thread playingThread = null;
@@ -56,6 +60,7 @@ public class MainActivity extends AppCompatActivity {
         startButton = findViewById(R.id.startRecording);
         stopButton = findViewById(R.id.stopRecording);
         playButton = findViewById(R.id.playRecorded);
+        audioGain = findViewById(R.id.audioGain);
 
         stopButton.setEnabled(false);
         playButton.setEnabled(false);
@@ -70,6 +75,7 @@ public class MainActivity extends AppCompatActivity {
                 stopButton.setEnabled(false);
                 playButton.setEnabled(true);
                 startButton.setEnabled(true);
+                audioGain.setEnabled(true);
 
                 Toast.makeText(MainActivity.this, "Recording Completed",
                         Toast.LENGTH_LONG).show();
@@ -161,6 +167,7 @@ public class MainActivity extends AppCompatActivity {
 
             startButton.setEnabled(false);
             stopButton.setEnabled(true);
+            audioGain.setEnabled(false);
         } else
             requestPermission();
     }
@@ -179,7 +186,6 @@ public class MainActivity extends AppCompatActivity {
     private void writeDataToFile() {
         String filePath = getApplicationContext().getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS).getAbsolutePath() + "/recording.pcm";
         short sData[] = new short[BufferElements2Rec];
-
         FileOutputStream os = null;
         try {
             os = new FileOutputStream(filePath);
@@ -192,9 +198,11 @@ public class MainActivity extends AppCompatActivity {
 
             int numRead = recorder.read(sData, 0, BufferElements2Rec);
             System.out.println("Short writing to file" + sData.toString());
+            int audioGainValue = Integer.parseInt(audioGain.getText().toString());
+            audioGainValue = (audioGainValue < 1)? 1 : audioGainValue;
             if (numRead > 0) {
                 for (int i = 0; i < numRead; ++i) {
-                    sData[i] = (short)Math.min((int)(sData[i] * 2), (int)Short.MAX_VALUE);
+                    sData[i] = (short)Math.min((int)(sData[i] * audioGainValue), (int)Short.MAX_VALUE);
                 }
             }
             try {
